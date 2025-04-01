@@ -6,6 +6,7 @@
 function select_pane() {
     local border_styling
     local current_pane
+    local fzf_version_comparison
     local pane
     local pane_id
     local preview
@@ -13,15 +14,25 @@ function select_pane() {
     # Save the currently active pane ID
     current_pane=$(tmux display-message -p '#{pane_id}')
 
-    # If we have fzf version 0.58.0 or later, we can enable border styling
-    vercomp '0.58.0' "$(fzf --version | awk '{print $1}')"
+    # Setup border styling
+    # Specific fzf releases have added additional styling options.
+    fzf_version=$(fzf --version | awk '{print $1}')
+    # - 0.58.0 or later, we can enable border styling
+    vercomp '0.58.0' "${fzf_version}"
     fzf_version_comparison=$?
-    if [[ $fzf_version_comparison -ne 1 ]]; then
-        border_styling="--input-border --input-label ' Search ' --info=inline-right \
+    if [[ ${fzf_version_comparison} -ne 1 ]]; then
+        border_styling+="--input-border --input-label ' Search ' --info=inline-right \
         --list-border --list-label ' Panes ' \
         --preview-border --preview-label ' Preview '"
-    else
-        # Fallback to old border styling used in tmux-fzf-pane-switch v1.1.2
+    fi
+    # - 0.61.0 or later, we can enable ghost text
+    vercomp '0.61.0' "${fzf_version}"
+    fzf_version_comparison=$?
+    if [[ ${fzf_version_comparison} -ne 1 ]]; then
+        border_styling+=" --ghost 'type to search...'"
+    fi
+    # Fallback to old border styling used in tmux-fzf-pane-switch release v1.1.2 if $border_styling is not set
+    if [[ -z ${border_styling+x} ]]; then
         border_styling="--preview-label='pane preview'"
     fi
 

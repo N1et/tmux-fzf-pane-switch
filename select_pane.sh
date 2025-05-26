@@ -42,7 +42,8 @@ function select_pane() {
     fi
 
     # Launch switcher
-    pane=$(tmux list-panes -aF "${4}" | 
+    session_name=$(tmux display-message -p '#S' | sed 's/\n//g')
+    pane=$(tmux list-panes -aF "${4}" |  grep -E "^[^ ]+ $session_name " |
         eval fzf --exit-0 --print-query --reverse --tmux "${2}" --with-nth=2.. "${border_styling}" "${preview}" | 
         tail -1)
 
